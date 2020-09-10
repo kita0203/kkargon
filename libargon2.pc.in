@@ -1,4 +1,4 @@
-# libargon2 info for pkg-config
+make install PREFIX=/usr# libargon2 info for pkg-config
 ## Template for downstream installers:
 ## - replace @UPSTREAM_VER@ with current version, e.g. '20160406'
 ## - replace @HOST_MULTIARCH@ with target arch lib, e.g. 'lib', 'lib/x86_64-linux-gnu' or 'lib64'
