@@ -12,7 +12,7 @@
  * - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0
  *
  * You should have received a copy of both of these licenses along with this
- * software. If not, they may be obtained at the above URLs.
+ * software. If not, they may be obtained at the above URLs.sls
  */
 
 #include <string.h>
@@ -37,7 +37,7 @@ const char *argon2_type2string(argon2_type type, int uppercase) {
 }
 
 int argon2_ctx(argon2_context *context, argon2_type type) {
-    /* 1. Validate all inputs */
+    /* 1. Validate all inputs 全ての入力の確認 */
     int result = validate_inputs(context);
     uint32_t memory_blocks, segment_length;
     argon2_instance_t instance;
@@ -50,7 +50,7 @@ int argon2_ctx(argon2_context *context, argon2_type type) {
         return ARGON2_INCORRECT_TYPE;
     }
 
-    /* 2. Align memory size */
+    /* 2. Align memory size メモリの整列させる*/
     /* Minimum memory_blocks = 8L blocks, where L is the number of lanes */
     memory_blocks = context->m_cost;
 
@@ -77,7 +77,7 @@ int argon2_ctx(argon2_context *context, argon2_type type) {
     }
 
     /* 3. Initialization: Hashing inputs, allocating memory, filling first
-     * blocks
+     * blocksブロック埋め、メモリ割り当てハッシュにの入力
      */
     result = initialize(&instance, context);
 
@@ -85,7 +85,7 @@ int argon2_ctx(argon2_context *context, argon2_type type) {
         return result;
     }
 
-    /* 4. Filling memory */
+    /* 4. Filling memoryメモリ埋め */
     result = fill_memory_blocks(&instance);
 
     if (ARGON2_OK != result) {
