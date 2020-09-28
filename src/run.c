@@ -9,7 +9,7 @@
  * these licenses can be found at:
  *
  * - CC0 1.0 Universal : https://creativecommons.org/publicdomain/zero/1.0
- * - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0
+ * - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0aaa
  *
  * You should have received a copy of both of these licenses along with this
  * software. If not, they may be obtained at the above URLs.
@@ -22,10 +22,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+#include <ctype.h>
 #include "argon2.h"
 #include "core.h"
 
+#define ever ;;i++
+
+enum {block_size = 16};
+enum {key_size = 8};
+enum {rounds = 2};
 #define T_COST_DEF 3
 #define LOG_M_COST_DEF 12 /* 2^12 = 4 MiB */
 #define LANES_DEF 1
@@ -173,7 +181,7 @@ int main(int argc, char *argv[]) {
     uint32_t t_cost = T_COST_DEF;
     uint32_t lanes = LANES_DEF;
     uint32_t threads = THREADS_DEF;
-    argon2_type type = Argon2_i; /* Argon2i is the default type */
+    argon2_type type = Argon2_d; /* Argon2i is the default type */
     int types_specified = 0;
     int m_cost_specified = 0;
     int encoded_only = 0;
@@ -331,6 +339,8 @@ int main(int argc, char *argv[]) {
 
     run(outlen, pwd, pwdlen, salt, t_cost, m_cost, lanes, threads, type,
        encoded_only, raw_only, version);
+
+     /* ここにfeistel構造入れる*/
 
     return ARGON2_OK;
 }
