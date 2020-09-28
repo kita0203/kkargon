@@ -99,6 +99,8 @@ Base64-encoded hash string
 @raw_only display only the hexadecimal of the hash
 @version Argon2 version
 */
+/*void runが計算するための関数
+*/
 static void run(uint32_t outlen, char *pwd, size_t pwdlen, char *salt, uint32_t t_cost,
                 uint32_t m_cost, uint32_t lanes, uint32_t threads,
                 argon2_type type, int encoded_only, int raw_only, uint32_t version) {
@@ -141,7 +143,7 @@ static void run(uint32_t outlen, char *pwd, size_t pwdlen, char *salt, uint32_t 
 
     result = argon2_hash(t_cost, m_cost, threads, pwd, pwdlen, salt, saltlen,
                          out, outlen, encoded, encodedlen, type,
-                         version);
+                         version);/*resultが結果表示*/
     if (result != ARGON2_OK)
         fatal(argon2_error_message(result));
 
@@ -190,7 +192,45 @@ int main(int argc, char *argv[]) {
     int i;
     size_t pwdlen;
     char pwd[MAX_PASS_LEN], *salt;
+    /* feistel構造を入れる（右と左に分ける） */
+    if (argc <= 2) {
+        if (argc  < 2) {
+            printf("Too few arguments\n");
+            exit(1);
+        }
+        if (!(strcmp(argv[1], "-help")) || !(strcmp(argv[1], "-h"))) execlp("cat", "cat", "HELP", NULL);
+        else {
+            printf("Bad arguments\n");
+            exit(1);
+        }
+    }
 
+    int mode = 0; 
+    if (!(strcmp(argv[1], "-e")) || !(strcmp(argv[1], "-encrypt"))) {
+        mode = 0;
+    } else if (!(strcmp(argv[1], "-d")) || !(strcmp(argv[1], "-decrypt"))) {
+            mode = 1;
+    } else {
+        printf("Bad arguments\n");
+        exit(1);
+    }
+    unsigned char *block = calloc(block_size, sizeof(unsigned char));
+    unsigned char *key = calloc(key_size, sizeof(unsigned char));
+    unsigned char *left = calloc(block_size / 2, sizeof(unsigned char));
+    unsigned char *right = calloc(block_size / 2, sizeof(unsigned char));
+    unsigned char *cf = NULL;
+    unsigned char *new_left = calloc(block_size / 2, sizeof(unsigned char));
+    unsigned char **keys;
+    unsigned char *p = NULL;
+    char *str;
+    int i, rc = 0, wc = 0, last_rc = 0;
+    long x = 0;
+    int fd1 = open(argv[2], O_RDONLY), fd2 = open(argv[3], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd1 == -1 || fd2 == -1) {
+        printf("Bad file name\n");
+        exit(1);
+    }
+    /* ここまでfeistelの文*/
     if (argc < 2) {
         usage(argv[0]);
         return ARGON2_MISSING_ARGS;
@@ -341,6 +381,7 @@ int main(int argc, char *argv[]) {
        encoded_only, raw_only, version);
 
      /* ここにfeistel構造入れる*/
+     
 
     return ARGON2_OK;
 }
