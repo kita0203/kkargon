@@ -32,8 +32,7 @@
 #define ever ;;i++
 
 enum {block_size = 16};
-enum {key_size = 8};
-enum {rounds = 2};
+enum {rounds = 10};
 #define T_COST_DEF 3
 #define LOG_M_COST_DEF 12 /* 2^12 = 4 MiB */
 #define LANES_DEF 1
