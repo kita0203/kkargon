@@ -81,18 +81,9 @@ void free_arr(unsigned char **a)
 
 int main(int argc, char *argv[])
 {
-    FILE *fp; // FILE型構造体
-	char fname[] = "test.txt";
- 
-	fp = fopen(fname, "r"); // ファイルを開く。失敗するとNULLを返す。
-	if(fp == NULL) {
-		printf("%s file not open!\n", fname);
-		return -1;
-	} else {
-		printf("%s file opened!\n", fname);
-	}
+   
 
-    //↑の奴の位置を変える。
+    
 
 
     if (argc <= 2) {
