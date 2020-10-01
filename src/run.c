@@ -42,6 +42,7 @@ enum {rounds = 10};
 
 #define UNUSED_PARAMETER(x) (void)(x)
 
+
 static void usage(const char *cmd) {
     printf("Usage:  %s [-h] salt [-i|-d|-id] [-t iterations] "
            "[-m log2(memory in KiB) | -k memory in KiB] [-p parallelism] "
@@ -123,7 +124,7 @@ unsigned char *f(unsigned char *block, int size)
     for (i = 0; i < size; i++) {
         cip[i] = block[i] ^ key[i];/*鍵とSBOXの部分がfeistelのラウンド関数部分→ここをargon2にかえる→ここの部分がargon2の入力部分（メッセージ）*/
     }
-     sbox(cip, size);
+    
      return cip;
 }
 
