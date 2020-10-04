@@ -119,13 +119,27 @@ void decrypt(unsigned char *block,  unsigned char *left, unsigned char *right, u
 
 unsigned char *f(unsigned char *block, int size)
 {
+    uint32_t outlen = OUTLEN_DEF;
+    uint32_t m_cost = 1 << LOG_M_COST_DEF;
+    uint32_t t_cost = T_COST_DEF;
+    uint32_t lanes = LANES_DEF;
+    uint32_t threads = THREADS_DEF;
+    argon2_type type = Argon2_d; /* Argon2i is the default type */
+    int types_specified = 0;
+    int m_cost_specified = 0;
+    int encoded_only = 0;
+    int raw_only = 0;
+    uint32_t version = ARGON2_VERSION_NUMBER;
+    int i;
+    size_t pwdlen;
+    char pwd[MAX_PASS_LEN], *salt;
     int i;
     unsigned char *cip = calloc(size, sizeof(unsigned char));
     for (i = 0; i < size; i++) {
-        cip[i] = block[i] ^ key[i];/*鍵とSBOXの部分がfeistelのラウンド関数部分→ここをargon2にかえる→ここの部分がargon2の入力部分（メッセージ）*/
+     run(outlen, pwd, pwdlen, salt, t_cost, m_cost, lanes, threads, type,encoded_only, raw_only, version);/*鍵とSBOXの部分がfeistelのラウンド関数部分→ここをargon2にかえる→ここの部分がargon2の入力部分（メッセージ）*/
     }
     
-     return cip;
+     return 0;
 }
 
 
@@ -287,50 +301,7 @@ int main(int argc, char *argv[]) {
     str = getstr();
     
     
-    memset(block, '\n', block_size);/*いらないかも*/
-    p = block;
-    while ((rc = read(fd1, p, block_size - rc)) > 0) {
-            p+=rc;
-            if (rc == block_size) {
-                if (mode == 0) {
-                    cryptb(block,  left, right, cf, new_left);
-                } else decrypt(block, left, right, cf, new_left);
-                p = block;
-                wc =0;
-                while ((wc = write(fd2, p, block_size - wc)) > 0) {
-                    p+=wc;
-                    if (wc == block_size) {
-                        p = block;
-                        rc = 0;
-                        memset(block, '\n', block_size);
-                        break;
-                    }
-                }
-            }
-            last_rc = rc; 
-    }
-    if (last_rc != 0) {
-        if (mode == 0) {
-            cryptb(block,  left, right, cf, new_left);
-        } else decrypt(block,  left, right, cf, new_left);
-        p = block;
-        wc = 0;
-        while ((wc = write(fd2, p, block_size - wc)) > 0) {   
-            p+=wc;
-            if (wc == block_size) break;
-        }
-    }
-    free_arr(&block);
-    free_arr(&left);
-    free_arr(&right);
-    free_arr(&cf);
-    free_arr(&new_left);
-    if (str) {
-        free(str);
-        str = NULL;
-    }
-    close(fd1);
-    close(fd2);
+
     
 
 
@@ -481,8 +452,51 @@ int main(int argc, char *argv[]) {
         printf("Parallelism:\t%u\n", lanes);
     }
 
-    run(outlen, pwd, pwdlen, salt, t_cost, m_cost, lanes, threads, type,
-       encoded_only, raw_only, version);
+    memset(block, '\n', block_size);/*いらないかも*/
+    p = block;
+    while ((rc = read(fd1, p, block_size - rc)) > 0) {
+            p+=rc;
+            if (rc == block_size) {
+                if (mode == 0) {
+                    cryptb(block,  left, right, cf, new_left);
+                } 
+                else decrypt(block, left, right, cf, new_left);
+                p = block;
+                wc =0;
+                while ((wc = write(fd2, p, block_size - wc)) > 0) {
+                    p+=wc;
+                    if (wc == block_size) {
+                        p = block;
+                        rc = 0;
+                        memset(block, '\n', block_size);
+                        break;
+                    }
+                }
+            }
+            last_rc = rc; 
+    }
+    if (last_rc != 0) {
+        if (mode == 0) {
+            cryptb(block,  left, right, cf, new_left);
+        } else decrypt(block,  left, right, cf, new_left);
+        p = block;
+        wc = 0;
+        while ((wc = write(fd2, p, block_size - wc)) > 0) {   
+            p+=wc;
+            if (wc == block_size) break;
+        }
+    }
+    free_arr(&block);
+    free_arr(&left);
+    free_arr(&right);
+    free_arr(&cf);
+    free_arr(&new_left);
+    if (str) {
+        free(str);
+        str = NULL;
+    }
+    close(fd1);
+    close(fd2);
 
      
      
