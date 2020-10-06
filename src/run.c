@@ -1,3 +1,4 @@
+
 /*
  * Argon2 reference source code package - reference C implementations
  *
@@ -84,90 +85,15 @@ static void print_hex(uint8_t *bytes, size_t bytes_len) {
     printf("\n");
 }
 
-void cryptb (unsigned char *block, unsigned char *left, unsigned char *right, unsigned char *cf, unsigned char *new_left)
+void
+echo(void)
 {
-    int i, j;
-    for (i = 0; i < rounds; i++) {
-        memcpy(left, block, block_size / 2);
-        memcpy(right, block + block_size / 2, block_size / 2);
-        cf = f(left, block_size / 2);/*ここをargon2に変える*/
-        for (j = 0; j < block_size / 2; j++) new_left[j] = right[j] ^ cf[j];
-        memcpy(right, left, block_size / 2);
-        memcpy(left, new_left, block_size / 2);
-        memcpy(block, left, block_size / 2);
-        memcpy(block + block_size / 2, right, block_size / 2);
-        if (cf) free(cf);
-    }
-}
-void decrypt(unsigned char *block,  unsigned char *left, unsigned char *right, unsigned char *cf, unsigned char *new_left)
-{
-    int i, j;
-    for (i = rounds - 1; i >= 0; i--) {
-        memcpy(left, block, block_size / 2);
-        memcpy(right, block + block_size / 2, block_size / 2);
-        cf = f(right, block_size / 2);/*ここをargon2に変える*/
-        for (j = 0; j < block_size / 2; j++) new_left[j] = left[j] ^ cf[j];
-        memcpy(left, right, block_size / 2);
-        memcpy(right, new_left, block_size / 2);
-        memcpy(block, left, block_size / 2);
-        memcpy(block + block_size / 2, right, block_size / 2);
-        if (cf) free(cf);
-    }
+    struct termios term;
+    tcgetattr (1, &term);
+    term.c_lflag ^= ECHO;
+    tcsetattr (1, TCSANOW, &term);
 }
 
-
-
-unsigned char *f(unsigned char *block, int size)
-{
-    uint32_t outlen = OUTLEN_DEF;
-    uint32_t m_cost = 1 << LOG_M_COST_DEF;
-    uint32_t t_cost = T_COST_DEF;
-    uint32_t lanes = LANES_DEF;
-    uint32_t threads = THREADS_DEF;
-    argon2_type type = Argon2_d; /* Argon2i is the default type */
-    int types_specified = 0;
-    int m_cost_specified = 0;
-    int encoded_only = 0;
-    int raw_only = 0;
-    uint32_t version = ARGON2_VERSION_NUMBER;
-    int i;
-    size_t pwdlen;
-    char pwd[MAX_PASS_LEN], *salt;
-    int i;
-    unsigned char *cip = calloc(size, sizeof(unsigned char));
-    for (i = 0; i < size; i++) {
-     run(outlen, pwd, pwdlen, salt, t_cost, m_cost, lanes, threads, type,encoded_only, raw_only, version);/*鍵とSBOXの部分がfeistelのラウンド関数部分→ここをargon2にかえる→ここの部分がargon2の入力部分（メッセージ）*/
-    }
-    
-     return 0;
-}
-
-
-void free_arr(unsigned char **a)
-{
-    if (a && *a) {
-        free(*a);
-        *a = NULL;
-    }
-}
-
-/*
-Runs Argon2 with certain inputs and parameters, inputs not cleared. Prints the
-Base64-encoded hash string
-@out output array with at least 32 bytes allocated
-@pwd NULL-terminated string, presumably from argv[]
-@salt salt array
-@t_cost number of iterations
-@m_cost amount of requested memory in KB
-@lanes amount of requested parallelism
-@threads actual parallelism
-@type Argon2 type we want to run
-@encoded_only display only the encoded hash
-@raw_only display only the hexadecimal of the hash
-@version Argon2 version
-*/
-/*void runが計算するための関数
-*/
 static void run(uint32_t outlen, char *pwd, size_t pwdlen, char *salt, uint32_t t_cost,
                 uint32_t m_cost, uint32_t lanes, uint32_t threads,
                 argon2_type type, int encoded_only, int raw_only, uint32_t version) {
@@ -210,7 +136,7 @@ static void run(uint32_t outlen, char *pwd, size_t pwdlen, char *salt, uint32_t 
 
     result = argon2_hash(t_cost, m_cost, threads, pwd, pwdlen, salt, saltlen,
                          out, outlen, encoded, encodedlen, type,
-                         version);/*resultが結果表示*/
+                         version);
     if (result != ARGON2_OK)
         fatal(argon2_error_message(result));
 
@@ -244,6 +170,92 @@ static void run(uint32_t outlen, char *pwd, size_t pwdlen, char *salt, uint32_t 
     free(encoded);
 }
 
+
+
+unsigned char *f(unsigned char *block, int size)
+{
+    uint32_t outlen = OUTLEN_DEF;
+    uint32_t m_cost = 1 << LOG_M_COST_DEF;
+    uint32_t t_cost = T_COST_DEF;
+    uint32_t lanes = LANES_DEF;
+    uint32_t threads = THREADS_DEF;
+    argon2_type type = Argon2_d; /* Argon2i is the default type */
+    int encoded_only = 0;
+    int raw_only = 0;
+    uint32_t version = ARGON2_VERSION_NUMBER;
+    int i;
+    size_t pwdlen;
+    char pwd[MAX_PASS_LEN], *salt;
+    for (i = 0; i < size; i++) {
+     run(outlen, pwd, pwdlen, salt, t_cost, m_cost, lanes, threads, type,encoded_only, raw_only, version);
+    }
+    
+     return 0;
+}
+
+
+void cryptb (unsigned char *block, unsigned char *left, unsigned char *right, unsigned char *cf, unsigned char *new_left)
+{
+    int i, j;
+    for (i = 0; i < rounds; i++) {
+        memcpy(left, block, block_size / 2);
+        memcpy(right, block + block_size / 2, block_size / 2);
+        cf = f(left, block_size / 2);/*ここをargon2に変える*/
+        for (j = 0; j < block_size / 2; j++) new_left[j] = right[j] ^ cf[j];
+        memcpy(right, left, block_size / 2);
+        memcpy(left, new_left, block_size / 2);
+        memcpy(block, left, block_size / 2);
+        memcpy(block + block_size / 2, right, block_size / 2);
+        if (cf) free(cf);
+    }
+}
+void decrypt(unsigned char *block,  unsigned char *left, unsigned char *right, unsigned char *cf, unsigned char *new_left)
+{
+    int i, j;
+    for (i = rounds - 1; i >= 0; i--) {
+        memcpy(left, block, block_size / 2);
+        memcpy(right, block + block_size / 2, block_size / 2);
+        cf = f(right, block_size / 2);/*ここをargon2に変える*/
+        for (j = 0; j < block_size / 2; j++) new_left[j] = left[j] ^ cf[j];
+        memcpy(left, right, block_size / 2);
+        memcpy(right, new_left, block_size / 2);
+        memcpy(block, left, block_size / 2);
+        memcpy(block + block_size / 2, right, block_size / 2);
+        if (cf) free(cf);
+    }
+}
+
+
+
+
+
+void free_arr(unsigned char **a)
+{
+    if (a && *a) {
+        free(*a);
+        *a = NULL;
+    }
+}
+
+/*
+Runs Argon2 with certain inputs and parameters, inputs not cleared. Prints the
+Base64-encoded hash string
+@out output array with at least 32 bytes allocated
+@pwd NULL-terminated string, presumably from argv[]
+@salt salt array
+@t_cost number of iterations
+@m_cost amount of requested memory in KB
+@lanes amount of requested parallelism
+@threads actual parallelism
+@type Argon2 type we want to run
+@encoded_only display only the encoded hash
+@raw_only display only the hexadecimal of the hash
+@version Argon2 version
+*/
+/*void runが計算するための関数
+*/
+
+
 int main(int argc, char *argv[]) {
     uint32_t outlen = OUTLEN_DEF;
     uint32_t m_cost = 1 << LOG_M_COST_DEF;
@@ -260,29 +272,6 @@ int main(int argc, char *argv[]) {
     size_t pwdlen;
     char pwd[MAX_PASS_LEN], *salt;
     /* feistel構造を入れる（右と左に分ける） */
-
-
-    if (argc <= 2) {
-        if (argc  < 2) {
-            printf("Too few arguments\n");
-            exit(1);
-        }
-        if (!(strcmp(argv[1], "-help")) || !(strcmp(argv[1], "-h"))) execlp("cat", "cat", "HELP", NULL);
-        else {
-            printf("Bad arguments\n");
-            exit(1);
-        }
-    }
-
-    int mode = 0; 
-    if (!(strcmp(argv[1], "-e")) || !(strcmp(argv[1], "-encrypt"))) {
-        mode = 0;
-    } else if (!(strcmp(argv[1], "-d")) || !(strcmp(argv[1], "-decrypt"))) {
-            mode = 1;
-    } else {
-        printf("Bad arguments\n");
-        exit(1);
-    }
     unsigned char *block = calloc(block_size, sizeof(unsigned char));
     unsigned char *left = calloc(block_size / 2, sizeof(unsigned char));
     unsigned char *right = calloc(block_size / 2, sizeof(unsigned char));
@@ -290,22 +279,8 @@ int main(int argc, char *argv[]) {
     unsigned char *new_left = calloc(block_size / 2, sizeof(unsigned char));
     unsigned char *p = NULL;
     char *str;
-    int i, rc = 0, wc = 0, last_rc = 0;
-    long x = 0;
-    int fd1 = open(argv[2], O_RDONLY), fd2 = open(argv[3], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd1 == -1 || fd2 == -1) {
-        printf("Bad file name\n");
-        exit(1);
-    }
-    char c[3], *eptr = NULL;
-    str = getstr();
-    
-    
 
     
-
-
-    /* ここまでfeistelの文*/
     if (argc < 2) {
         usage(argv[0]);
         return ARGON2_MISSING_ARGS;
@@ -437,7 +412,6 @@ int main(int argc, char *argv[]) {
             fatal("unknown argument");
         }
     }
-
     if (types_specified > 1) {
         fatal("cannot specify multiple Argon2 types");
     }
@@ -454,52 +428,13 @@ int main(int argc, char *argv[]) {
 
     memset(block, '\n', block_size);/*いらないかも*/
     p = block;
-    while ((rc = read(fd1, p, block_size - rc)) > 0) {
-            p+=rc;
-            if (rc == block_size) {
-                if (mode == 0) {
-                    cryptb(block,  left, right, cf, new_left);
-                } 
-                else decrypt(block, left, right, cf, new_left);
-                p = block;
-                wc =0;
-                while ((wc = write(fd2, p, block_size - wc)) > 0) {
-                    p+=wc;
-                    if (wc == block_size) {
-                        p = block;
-                        rc = 0;
-                        memset(block, '\n', block_size);
-                        break;
-                    }
-                }
-            }
-            last_rc = rc; 
-    }
-    if (last_rc != 0) {
-        if (mode == 0) {
-            cryptb(block,  left, right, cf, new_left);
-        } else decrypt(block,  left, right, cf, new_left);
-        p = block;
-        wc = 0;
-        while ((wc = write(fd2, p, block_size - wc)) > 0) {   
-            p+=wc;
-            if (wc == block_size) break;
-        }
-    }
+    cryptb(block,  left, right, cf, new_left);
     free_arr(&block);
     free_arr(&left);
     free_arr(&right);
     free_arr(&cf);
     free_arr(&new_left);
-    if (str) {
-        free(str);
-        str = NULL;
-    }
-    close(fd1);
-    close(fd2);
 
-     
-     
 
     return ARGON2_OK;
 }
